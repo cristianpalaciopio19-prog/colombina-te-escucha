@@ -2,6 +2,7 @@ import os
 import sqlite3
 import json
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from flask import Flask, render_template, request, redirect, url_for, flash, g
 
 from routes_data import RUTAS, TIPOS_PQR
@@ -11,6 +12,11 @@ app.secret_key = os.environ.get("SECRET_KEY", "colombina-te-escucha-dev-key")
 
 DB_PATH = os.environ.get("DB_PATH", os.path.join(os.path.dirname(__file__), "pqr.db"))
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "colombina2026")
+ZONA_COLOMBIA = ZoneInfo("America/Bogota")
+
+
+def hora_colombia():
+    return datetime.now(ZONA_COLOMBIA).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def get_db():
@@ -84,7 +90,7 @@ def enviar():
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            hora_colombia(),
             nombre,
             cin,
             ruta,
@@ -112,6 +118,34 @@ def admin():
         "SELECT * FROM pqr ORDER BY id DESC"
     ).fetchall()
     return render_template("admin.html", registros=registros, clave=clave)
+
+
+@app.route("/admin/detalle/<int:pqr_id>")
+def admin_detalle(pqr_id):
+    clave = request.args.get("clave", "")
+    if clave != ADMIN_PASSWORD:
+        return render_template("admin_login.html")
+
+    db = get_db()
+    registro = db.execute("SELECT * FROM pqr WHERE id = ?", (pqr_id,)).fetchone()
+    if registro is None:
+        flash("Ese registro ya no existe.", "error")
+        return redirect(url_for("admin", clave=clave))
+
+    return render_template("admin_detalle.html", r=registro, clave=clave)
+
+
+@app.route("/admin/eliminar/<int:pqr_id>", methods=["POST"])
+def admin_eliminar(pqr_id):
+    clave = request.form.get("clave", "")
+    if clave != ADMIN_PASSWORD:
+        return render_template("admin_login.html")
+
+    db = get_db()
+    db.execute("DELETE FROM pqr WHERE id = ?", (pqr_id,))
+    db.commit()
+    flash("Registro eliminado.", "success")
+    return redirect(url_for("admin", clave=clave))
 
 
 init_db()
