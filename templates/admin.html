@@ -21,6 +21,12 @@
   .empty { text-align: center; color: #888; padding: 40px; }
   .top { display: flex; justify-content: space-between; align-items: center; }
   .count { color: #6b6d85; font-size: 14px; }
+  .acciones { display: flex; gap: 8px; align-items: center; white-space: nowrap; }
+  .btn-ver { padding: 6px 12px; border-radius: 999px; background: #293184; color: #fff; text-decoration: none; font-size: 12.5px; font-weight: 600; }
+  .btn-ver:hover { background: #1a1f5c; }
+  .acciones form { margin: 0; }
+  .btn-eliminar { padding: 6px 12px; border-radius: 999px; background: #fdeaea; color: #e11d1f; border: 1px solid #f7c3c3; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .btn-eliminar:hover { background: #f7c3c3; }
 </style>
 </head>
 <body>
@@ -34,25 +40,23 @@
     <tr>
       <th>Fecha</th>
       <th>Nombre</th>
-      <th>CIN</th>
       <th>Ruta</th>
-      <th>Municipio</th>
-      <th>Conductor</th>
-      <th>Placa</th>
       <th>Tipo</th>
-      <th>Detalle</th>
+      <th>Acciones</th>
     </tr>
     {% for r in registros %}
     <tr>
       <td>{{ r['fecha'] }}</td>
       <td>{{ r['nombre'] }}</td>
-      <td>{{ r['cin'] }}</td>
-      <td>{{ r['ruta'] }}</td>
-      <td>{{ r['municipio'] }}</td>
-      <td>{{ r['conductor'] }}</td>
-      <td>{{ r['placa'] }}</td>
+      <td>{{ r['ruta'] }} — {{ r['municipio'] }}</td>
       <td><span class="tag tag-{{ r['tipo_pqr'] }}">{{ r['tipo_pqr'] }}</span></td>
-      <td>{{ r['detalle'] }}</td>
+      <td class="acciones">
+        <a class="btn-ver" href="{{ url_for('admin_detalle', pqr_id=r['id'], clave=clave) }}">Ver detalle</a>
+        <form method="POST" action="{{ url_for('admin_eliminar', pqr_id=r['id']) }}" onsubmit="return confirm('¿Eliminar este registro de forma permanente?');">
+          <input type="hidden" name="clave" value="{{ clave }}">
+          <button type="submit" class="btn-eliminar">Eliminar</button>
+        </form>
+      </td>
     </tr>
     {% endfor %}
   </table>
