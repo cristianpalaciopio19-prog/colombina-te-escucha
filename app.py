@@ -1,7 +1,7 @@
 import os
 import json
 from datetime import datetime
-from urllib.parse import urlparse
+from zoneinfo import ZoneInfo
 
 import psycopg2
 import psycopg2.extras
@@ -14,6 +14,11 @@ app.secret_key = os.environ.get("SECRET_KEY", "colombina-te-escucha-dev-key")
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "colombina2026")
+ZONA_COLOMBIA = ZoneInfo("America/Bogota")
+
+
+def hora_colombia():
+    return datetime.now(ZONA_COLOMBIA).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def get_db():
@@ -89,7 +94,7 @@ def enviar():
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
         (
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            hora_colombia(),
             nombre,
             cin,
             ruta,
@@ -119,6 +124,40 @@ def admin():
     registros = cur.fetchall()
     cur.close()
     return render_template("admin.html", registros=registros, clave=clave)
+
+
+@app.route("/admin/detalle/<int:pqr_id>")
+def admin_detalle(pqr_id):
+    clave = request.args.get("clave", "")
+    if clave != ADMIN_PASSWORD:
+        return render_template("admin_login.html")
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT * FROM pqr WHERE id = %s", (pqr_id,))
+    registro = cur.fetchone()
+    cur.close()
+
+    if registro is None:
+        flash("Ese registro ya no existe.", "error")
+        return redirect(url_for("admin", clave=clave))
+
+    return render_template("admin_detalle.html", r=registro, clave=clave)
+
+
+@app.route("/admin/eliminar/<int:pqr_id>", methods=["POST"])
+def admin_eliminar(pqr_id):
+    clave = request.form.get("clave", "")
+    if clave != ADMIN_PASSWORD:
+        return render_template("admin_login.html")
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("DELETE FROM pqr WHERE id = %s", (pqr_id,))
+    db.commit()
+    cur.close()
+    flash("Registro eliminado.", "success")
+    return redirect(url_for("admin", clave=clave))
 
 
 init_db()
