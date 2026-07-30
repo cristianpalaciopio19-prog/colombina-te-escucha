@@ -1,8 +1,10 @@
 import os
-import sqlite3
 import json
 from datetime import datetime
-from zoneinfo import ZoneInfo
+from urllib.parse import urlparse
+
+import psycopg2
+import psycopg2.extras
 from flask import Flask, render_template, request, redirect, url_for, flash, g
 
 from routes_data import RUTAS, TIPOS_PQR
@@ -10,19 +12,13 @@ from routes_data import RUTAS, TIPOS_PQR
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "colombina-te-escucha-dev-key")
 
-DB_PATH = os.environ.get("DB_PATH", os.path.join(os.path.dirname(__file__), "pqr.db"))
+DATABASE_URL = os.environ.get("DATABASE_URL")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "colombina2026")
-ZONA_COLOMBIA = ZoneInfo("America/Bogota")
-
-
-def hora_colombia():
-    return datetime.now(ZONA_COLOMBIA).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def get_db():
     if "db" not in g:
-        g.db = sqlite3.connect(DB_PATH)
-        g.db.row_factory = sqlite3.Row
+        g.db = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
     return g.db
 
 
@@ -34,11 +30,12 @@ def close_db(exception=None):
 
 
 def init_db():
-    db = sqlite3.connect(DB_PATH)
-    db.execute(
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    cur.execute(
         """
         CREATE TABLE IF NOT EXISTS pqr (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             fecha TEXT NOT NULL,
             nombre TEXT NOT NULL,
             cin TEXT NOT NULL,
@@ -51,8 +48,9 @@ def init_db():
         )
         """
     )
-    db.commit()
-    db.close()
+    conn.commit()
+    cur.close()
+    conn.close()
 
 
 @app.route("/", methods=["GET"])
@@ -84,13 +82,14 @@ def enviar():
         return redirect(url_for("index"))
 
     db = get_db()
-    db.execute(
+    cur = db.cursor()
+    cur.execute(
         """
         INSERT INTO pqr (fecha, nombre, cin, ruta, municipio, conductor, placa, tipo_pqr, detalle)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
         (
-            hora_colombia(),
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             nombre,
             cin,
             ruta,
@@ -102,6 +101,7 @@ def enviar():
         ),
     )
     db.commit()
+    cur.close()
 
     flash("¡Gracias! Tu PQR fue registrada correctamente.", "success")
     return redirect(url_for("index"))
@@ -114,38 +114,11 @@ def admin():
         return render_template("admin_login.html")
 
     db = get_db()
-    registros = db.execute(
-        "SELECT * FROM pqr ORDER BY id DESC"
-    ).fetchall()
+    cur = db.cursor()
+    cur.execute("SELECT * FROM pqr ORDER BY id DESC")
+    registros = cur.fetchall()
+    cur.close()
     return render_template("admin.html", registros=registros, clave=clave)
-
-
-@app.route("/admin/detalle/<int:pqr_id>")
-def admin_detalle(pqr_id):
-    clave = request.args.get("clave", "")
-    if clave != ADMIN_PASSWORD:
-        return render_template("admin_login.html")
-
-    db = get_db()
-    registro = db.execute("SELECT * FROM pqr WHERE id = ?", (pqr_id,)).fetchone()
-    if registro is None:
-        flash("Ese registro ya no existe.", "error")
-        return redirect(url_for("admin", clave=clave))
-
-    return render_template("admin_detalle.html", r=registro, clave=clave)
-
-
-@app.route("/admin/eliminar/<int:pqr_id>", methods=["POST"])
-def admin_eliminar(pqr_id):
-    clave = request.form.get("clave", "")
-    if clave != ADMIN_PASSWORD:
-        return render_template("admin_login.html")
-
-    db = get_db()
-    db.execute("DELETE FROM pqr WHERE id = ?", (pqr_id,))
-    db.commit()
-    flash("Registro eliminado.", "success")
-    return redirect(url_for("admin", clave=clave))
 
 
 init_db()
