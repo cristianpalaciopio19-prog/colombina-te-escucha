@@ -118,12 +118,23 @@ def admin():
     if clave != ADMIN_PASSWORD:
         return render_template("admin_login.html")
 
+    tipo = request.args.get("tipo", "")
+
     db = get_db()
     cur = db.cursor()
-    cur.execute("SELECT * FROM pqr ORDER BY id DESC")
+    if tipo:
+        cur.execute("SELECT * FROM pqr WHERE tipo_pqr = %s ORDER BY id DESC", (tipo,))
+    else:
+        cur.execute("SELECT * FROM pqr ORDER BY id DESC")
     registros = cur.fetchall()
     cur.close()
-    return render_template("admin.html", registros=registros, clave=clave)
+    return render_template(
+        "admin.html",
+        registros=registros,
+        clave=clave,
+        filtro_tipo=tipo,
+        tipos_pqr=TIPOS_PQR,
+    )
 
 
 @app.route("/admin/detalle/<int:pqr_id>")
@@ -151,13 +162,15 @@ def admin_eliminar(pqr_id):
     if clave != ADMIN_PASSWORD:
         return render_template("admin_login.html")
 
+    tipo = request.form.get("tipo", "")
+
     db = get_db()
     cur = db.cursor()
     cur.execute("DELETE FROM pqr WHERE id = %s", (pqr_id,))
     db.commit()
     cur.close()
     flash("Registro eliminado.", "success")
-    return redirect(url_for("admin", clave=clave))
+    return redirect(url_for("admin", clave=clave, tipo=tipo))
 
 
 init_db()
