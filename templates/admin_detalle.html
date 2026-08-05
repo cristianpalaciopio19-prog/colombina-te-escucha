@@ -22,9 +22,16 @@
   .campo span { display: block; font-size: 11.5px; font-weight: 600; color: #6b6d85; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 3px; }
   .campo p { margin: 0; font-size: 14.5px; }
   .detalle-box { background: #f1efe8; border-radius: 10px; padding: 16px; font-size: 14.5px; line-height: 1.6; white-space: pre-wrap; }
-  .acciones { margin-top: 24px; display: flex; justify-content: flex-end; }
+  .acciones { margin-top: 24px; display: flex; justify-content: flex-end; gap: 10px; }
   .btn-eliminar { padding: 9px 18px; border-radius: 999px; background: #fdeaea; color: #e11d1f; border: 1px solid #f7c3c3; font-size: 13.5px; font-weight: 600; cursor: pointer; }
   .btn-eliminar:hover { background: #f7c3c3; }
+  .btn-aprobar { padding: 9px 18px; border-radius: 999px; background: #e8f7ee; color: #2ea043; border: 1px solid #bfe8cc; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+  .btn-aprobar:hover { background: #bfe8cc; }
+  .btn-desaprobar { padding: 9px 18px; border-radius: 999px; background: #fff6e6; color: #b3760a; border: 1px solid #f0d9a3; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+  .btn-desaprobar:hover { background: #f0d9a3; }
+  .estado { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; margin-left: 8px; }
+  .estado-visto { background: #e8f7ee; color: #2ea043; }
+  .estado-pendiente { background: #fff6e6; color: #b3760a; }
 </style>
 </head>
 <body>
@@ -32,6 +39,11 @@
     <a class="back" href="{{ url_for('admin', clave=clave) }}">&larr; Volver al listado</a>
     <div class="card">
       <span class="tag tag-{{ r['tipo_pqr'] }}">{{ r['tipo_pqr'] }}</span>
+      {% if r['aprobado'] %}
+      <span class="estado estado-visto">Visto</span>
+      {% else %}
+      <span class="estado estado-pendiente">Pendiente</span>
+      {% endif %}
       <h1>{{ r['nombre'] }}</h1>
       <div class="fecha">{{ r['fecha'] }} (hora Colombia)</div>
 
@@ -49,8 +61,21 @@
       </div>
 
       <div class="acciones">
+        <form method="POST" action="{{ url_for('admin_aprobar', pqr_id=r['id']) }}">
+          <input type="hidden" name="clave" value="{{ clave }}">
+          <input type="hidden" name="tipo" value="{{ filtro_tipo }}">
+          <input type="hidden" name="fecha" value="{{ filtro_fecha }}">
+          <input type="hidden" name="nuevo_estado" value="{{ 'false' if r['aprobado'] else 'true' }}">
+          {% if r['aprobado'] %}
+          <button type="submit" class="btn-desaprobar">Marcar como pendiente</button>
+          {% else %}
+          <button type="submit" class="btn-aprobar">Marcar como visto</button>
+          {% endif %}
+        </form>
         <form method="POST" action="{{ url_for('admin_eliminar', pqr_id=r['id']) }}" onsubmit="return confirm('¿Eliminar este registro de forma permanente?');">
           <input type="hidden" name="clave" value="{{ clave }}">
+          <input type="hidden" name="tipo" value="{{ filtro_tipo }}">
+          <input type="hidden" name="fecha" value="{{ filtro_fecha }}">
           <button type="submit" class="btn-eliminar">Eliminar este registro</button>
         </form>
       </div>

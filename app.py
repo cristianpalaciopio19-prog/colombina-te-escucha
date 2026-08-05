@@ -49,9 +49,13 @@ def init_db():
             conductor TEXT NOT NULL,
             placa TEXT NOT NULL,
             tipo_pqr TEXT NOT NULL,
-            detalle TEXT NOT NULL
+            detalle TEXT NOT NULL,
+            aprobado BOOLEAN NOT NULL DEFAULT FALSE
         )
         """
+    )
+    cur.execute(
+        "ALTER TABLE pqr ADD COLUMN IF NOT EXISTS aprobado BOOLEAN NOT NULL DEFAULT FALSE"
     )
     conn.commit()
     cur.close()
@@ -119,13 +123,25 @@ def admin():
         return render_template("admin_login.html")
 
     tipo = request.args.get("tipo", "")
+    fecha = request.args.get("fecha", "")
+
+    condiciones = []
+    valores = []
+    if tipo:
+        condiciones.append("tipo_pqr = %s")
+        valores.append(tipo)
+    if fecha:
+        condiciones.append("fecha LIKE %s")
+        valores.append(f"{fecha}%")
+
+    query = "SELECT * FROM pqr"
+    if condiciones:
+        query += " WHERE " + " AND ".join(condiciones)
+    query += " ORDER BY id DESC"
 
     db = get_db()
     cur = db.cursor()
-    if tipo:
-        cur.execute("SELECT * FROM pqr WHERE tipo_pqr = %s ORDER BY id DESC", (tipo,))
-    else:
-        cur.execute("SELECT * FROM pqr ORDER BY id DESC")
+    cur.execute(query, tuple(valores))
     registros = cur.fetchall()
     cur.close()
     return render_template(
@@ -133,7 +149,8 @@ def admin():
         registros=registros,
         clave=clave,
         filtro_tipo=tipo,
-        tipos_pqr=TIPOS_PQR,
+        filtro_fecha=fecha,
+        tipos_pqr_filtro=[t for t in TIPOS_PQR if t != "Queja"],
     )
 
 
@@ -153,7 +170,13 @@ def admin_detalle(pqr_id):
         flash("Ese registro ya no existe.", "error")
         return redirect(url_for("admin", clave=clave))
 
-    return render_template("admin_detalle.html", r=registro, clave=clave)
+    return render_template(
+        "admin_detalle.html",
+        r=registro,
+        clave=clave,
+        filtro_tipo=request.args.get("tipo", ""),
+        filtro_fecha=request.args.get("fecha", ""),
+    )
 
 
 @app.route("/admin/eliminar/<int:pqr_id>", methods=["POST"])
@@ -163,6 +186,7 @@ def admin_eliminar(pqr_id):
         return render_template("admin_login.html")
 
     tipo = request.form.get("tipo", "")
+    fecha = request.form.get("fecha", "")
 
     db = get_db()
     cur = db.cursor()
@@ -170,7 +194,26 @@ def admin_eliminar(pqr_id):
     db.commit()
     cur.close()
     flash("Registro eliminado.", "success")
-    return redirect(url_for("admin", clave=clave, tipo=tipo))
+    return redirect(url_for("admin", clave=clave, tipo=tipo, fecha=fecha))
+
+
+@app.route("/admin/aprobar/<int:pqr_id>", methods=["POST"])
+def admin_aprobar(pqr_id):
+    clave = request.form.get("clave", "")
+    if clave != ADMIN_PASSWORD:
+        return render_template("admin_login.html")
+
+    tipo = request.form.get("tipo", "")
+    fecha = request.form.get("fecha", "")
+    nuevo_estado = request.form.get("nuevo_estado", "true") == "true"
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("UPDATE pqr SET aprobado = %s WHERE id = %s", (nuevo_estado, pqr_id))
+    db.commit()
+    cur.close()
+    flash("Registro marcado como visto." if nuevo_estado else "Registro marcado como pendiente.", "success")
+    return redirect(url_for("admin", clave=clave, tipo=tipo, fecha=fecha))
 
 
 init_db()

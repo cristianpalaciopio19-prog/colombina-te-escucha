@@ -38,6 +38,22 @@
   .acciones form { margin: 0; }
   .btn-eliminar { padding: 6px 12px; border-radius: 999px; background: #fdeaea; color: #e11d1f; border: 1px solid #f7c3c3; font-size: 12.5px; font-weight: 600; cursor: pointer; }
   .btn-eliminar:hover { background: #f7c3c3; }
+  .btn-aprobar { padding: 6px 12px; border-radius: 999px; background: #e8f7ee; color: #2ea043; border: 1px solid #bfe8cc; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .btn-aprobar:hover { background: #bfe8cc; }
+  .btn-desaprobar { padding: 6px 12px; border-radius: 999px; background: #fff6e6; color: #b3760a; border: 1px solid #f0d9a3; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .btn-desaprobar:hover { background: #f0d9a3; }
+  .estado { padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600; }
+  .estado-visto { background: #e8f7ee; color: #2ea043; }
+  .estado-pendiente { background: #fff6e6; color: #b3760a; }
+  .filtros input[type="date"] {
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    color: #22243a;
+    background: #fff;
+  }
 </style>
 </head>
 <body>
@@ -50,11 +66,12 @@
     <input type="hidden" name="clave" value="{{ clave }}">
     <select name="tipo" onchange="this.form.submit()">
       <option value="">Todos los tipos</option>
-      {% for t in tipos_pqr %}
+      {% for t in tipos_pqr_filtro %}
       <option value="{{ t }}" {% if filtro_tipo == t %}selected{% endif %}>{{ t }}</option>
       {% endfor %}
     </select>
-    {% if filtro_tipo %}
+    <input type="date" name="fecha" value="{{ filtro_fecha }}" onchange="this.form.submit()">
+    {% if filtro_tipo or filtro_fecha %}
     <a class="link-limpiar" href="{{ url_for('admin', clave=clave) }}">Limpiar filtro</a>
     {% endif %}
   </form>
@@ -66,6 +83,7 @@
       <th>Nombre</th>
       <th>Ruta</th>
       <th>Tipo</th>
+      <th>Estado</th>
       <th>Acciones</th>
     </tr>
     {% for r in registros %}
@@ -74,11 +92,30 @@
       <td>{{ r['nombre'] }}</td>
       <td>{{ r['ruta'] }} — {{ r['municipio'] }}</td>
       <td><span class="tag tag-{{ r['tipo_pqr'] }}">{{ r['tipo_pqr'] }}</span></td>
+      <td>
+        {% if r['aprobado'] %}
+        <span class="estado estado-visto">Visto</span>
+        {% else %}
+        <span class="estado estado-pendiente">Pendiente</span>
+        {% endif %}
+      </td>
       <td class="acciones">
-        <a class="btn-ver" href="{{ url_for('admin_detalle', pqr_id=r['id'], clave=clave) }}">Ver detalle</a>
+        <a class="btn-ver" href="{{ url_for('admin_detalle', pqr_id=r['id'], clave=clave, tipo=filtro_tipo, fecha=filtro_fecha) }}">Ver detalle</a>
+        <form method="POST" action="{{ url_for('admin_aprobar', pqr_id=r['id']) }}">
+          <input type="hidden" name="clave" value="{{ clave }}">
+          <input type="hidden" name="tipo" value="{{ filtro_tipo }}">
+          <input type="hidden" name="fecha" value="{{ filtro_fecha }}">
+          <input type="hidden" name="nuevo_estado" value="{{ 'false' if r['aprobado'] else 'true' }}">
+          {% if r['aprobado'] %}
+          <button type="submit" class="btn-desaprobar">Desaprobar</button>
+          {% else %}
+          <button type="submit" class="btn-aprobar">Aprobar</button>
+          {% endif %}
+        </form>
         <form method="POST" action="{{ url_for('admin_eliminar', pqr_id=r['id']) }}" onsubmit="return confirm('¿Eliminar este registro de forma permanente?');">
           <input type="hidden" name="clave" value="{{ clave }}">
           <input type="hidden" name="tipo" value="{{ filtro_tipo }}">
+          <input type="hidden" name="fecha" value="{{ filtro_fecha }}">
           <button type="submit" class="btn-eliminar">Eliminar</button>
         </form>
       </td>
@@ -87,8 +124,12 @@
   </table>
   {% else %}
   <div class="empty">
-    {% if filtro_tipo %}
+    {% if filtro_tipo and filtro_fecha %}
+    No hay registros de tipo "{{ filtro_tipo }}" para el {{ filtro_fecha }}.
+    {% elif filtro_tipo %}
     No hay registros de tipo "{{ filtro_tipo }}".
+    {% elif filtro_fecha %}
+    No hay registros para el {{ filtro_fecha }}.
     {% else %}
     Aún no hay registros de PQR.
     {% endif %}
