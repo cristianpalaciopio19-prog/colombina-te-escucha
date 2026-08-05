@@ -236,6 +236,61 @@ body {
   transform: rotate(45deg);
 }
 
+/* --- Aforo público (casos y respuestas) --- */
+.aforo { margin-bottom: 32px; }
+.aforo-header { text-align: center; margin-bottom: 18px; }
+.aforo-header h2 {
+  font-family: 'Fredoka', sans-serif;
+  color: var(--azul);
+  font-size: 1.4rem;
+  margin: 0 0 8px;
+}
+.aforo-header p {
+  max-width: 480px;
+  margin: 0 auto;
+  color: #52546b;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.aforo-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.aforo-card {
+  background: #fff;
+  border-radius: var(--radio);
+  padding: 18px 20px;
+  box-shadow: 0 8px 20px rgba(41,49,132,0.08);
+  border: 1px solid var(--borde);
+}
+.aforo-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.aforo-tag { pointer-events: none; padding: 6px 14px; font-size: 12.5px; }
+.aforo-fecha { font-size: 12px; color: #9496ab; }
+.aforo-bloque { margin-bottom: 10px; }
+.aforo-bloque:last-child { margin-bottom: 0; }
+.aforo-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b6d85;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 4px;
+}
+.aforo-bloque p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--tinta); }
+.aforo-respuesta {
+  background: rgba(41,49,132,0.06);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.aforo-respuesta .aforo-label { color: var(--azul); }
+
 .foot {
   text-align: center;
   margin-top: 28px;
