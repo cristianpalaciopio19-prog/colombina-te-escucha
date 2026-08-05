@@ -57,6 +57,12 @@ def init_db():
     cur.execute(
         "ALTER TABLE pqr ADD COLUMN IF NOT EXISTS aprobado BOOLEAN NOT NULL DEFAULT FALSE"
     )
+    cur.execute(
+        "ALTER TABLE pqr ADD COLUMN IF NOT EXISTS respuesta TEXT"
+    )
+    cur.execute(
+        "ALTER TABLE pqr ADD COLUMN IF NOT EXISTS publicado BOOLEAN NOT NULL DEFAULT FALSE"
+    )
     conn.commit()
     cur.close()
     conn.close()
@@ -64,10 +70,24 @@ def init_db():
 
 @app.route("/", methods=["GET"])
 def index():
+    db = get_db()
+    cur = db.cursor()
+    cur.execute(
+        """
+        SELECT id, fecha, tipo_pqr, detalle, respuesta
+        FROM pqr
+        WHERE publicado = TRUE AND respuesta IS NOT NULL AND respuesta <> ''
+        ORDER BY id DESC
+        """
+    )
+    respuestas_publicas = cur.fetchall()
+    cur.close()
+
     return render_template(
         "index.html",
         rutas_json=json.dumps(RUTAS, ensure_ascii=False),
         tipos_pqr=TIPOS_PQR,
+        respuestas_publicas=respuestas_publicas,
     )
 
 
@@ -214,6 +234,30 @@ def admin_aprobar(pqr_id):
     cur.close()
     flash("Registro marcado como visto." if nuevo_estado else "Registro marcado como pendiente.", "success")
     return redirect(url_for("admin", clave=clave, tipo=tipo, fecha=fecha))
+
+
+@app.route("/admin/responder/<int:pqr_id>", methods=["POST"])
+def admin_responder(pqr_id):
+    clave = request.form.get("clave", "")
+    if clave != ADMIN_PASSWORD:
+        return render_template("admin_login.html")
+
+    tipo = request.form.get("tipo", "")
+    fecha = request.form.get("fecha", "")
+    respuesta = request.form.get("respuesta", "").strip()
+    publicar = request.form.get("publicar") == "on"
+
+    db = get_db()
+    cur = db.cursor()
+    cur.execute(
+        "UPDATE pqr SET respuesta = %s, publicado = %s WHERE id = %s",
+        (respuesta, publicar, pqr_id),
+    )
+    db.commit()
+    cur.close()
+
+    flash("Respuesta guardada y publicada." if publicar else "Respuesta guardada (sin publicar).", "success")
+    return redirect(url_for("admin_detalle", pqr_id=pqr_id, clave=clave, tipo=tipo, fecha=fecha))
 
 
 init_db()
