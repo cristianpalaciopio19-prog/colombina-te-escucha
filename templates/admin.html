@@ -45,6 +45,7 @@
   .estado { padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600; }
   .estado-visto { background: #e8f7ee; color: #2ea043; }
   .estado-pendiente { background: #fff6e6; color: #b3760a; }
+  .estado-publicado { background: #e8eefd; color: #293184; }
   .filtros input[type="date"] {
     padding: 7px 12px;
     border-radius: 8px;
@@ -97,6 +98,9 @@
         <span class="estado estado-visto">Visto</span>
         {% else %}
         <span class="estado estado-pendiente">Pendiente</span>
+        {% endif %}
+        {% if r['publicado'] %}
+        <span class="estado estado-publicado">Publicada</span>
         {% endif %}
       </td>
       <td class="acciones">

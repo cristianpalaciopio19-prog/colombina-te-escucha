@@ -29,6 +29,34 @@
       <p class="privacidad">Tu nombre y CIN quedarán registrados junto con tu PQR, para poder darle seguimiento y contactarte si es necesario.</p>
     </section>
 
+    {% if respuestas_publicas %}
+    <section class="aforo">
+      <div class="aforo-header">
+        <span class="eyebrow">Aforo público</span>
+        <h2>Casos y respuestas</h2>
+        <p>Estos son casos reales reportados por usuarios del transporte, con la respuesta de la empresa. No se muestra ningún dato personal.</p>
+      </div>
+      <div class="aforo-lista">
+        {% for r in respuestas_publicas %}
+        <div class="aforo-card">
+          <div class="aforo-card-top">
+            <span class="pqr-chip aforo-tag">{{ r['tipo_pqr'] }}</span>
+            <span class="aforo-fecha">{{ r['fecha'][:10] }}</span>
+          </div>
+          <div class="aforo-bloque">
+            <span class="aforo-label">Caso presentado</span>
+            <p>{{ r['detalle'] }}</p>
+          </div>
+          <div class="aforo-bloque aforo-respuesta">
+            <span class="aforo-label">Nuestra respuesta</span>
+            <p>{{ r['respuesta'] }}</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}

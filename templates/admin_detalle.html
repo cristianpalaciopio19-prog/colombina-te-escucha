@@ -32,6 +32,24 @@
   .estado { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; margin-left: 8px; }
   .estado-visto { background: #e8f7ee; color: #2ea043; }
   .estado-pendiente { background: #fff6e6; color: #b3760a; }
+  .estado-publicado { background: #e8eefd; color: #293184; margin-left: 6px; }
+  .respuesta-campo { margin-top: 20px; }
+  .respuesta-campo textarea {
+    width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 10px;
+    border: 1.5px solid #d8d3c4; background: #f1efe8; font-family: 'Inter', sans-serif;
+    font-size: 14.5px; color: #22243a; resize: vertical; margin-top: 6px;
+  }
+  .respuesta-campo textarea:focus { outline: none; border-color: #293184; background: #fff; }
+  .publicar-check {
+    display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: #52546b;
+    margin: 10px 0 14px; cursor: pointer; line-height: 1.4;
+  }
+  .publicar-check input { margin-top: 3px; }
+  .btn-guardar-respuesta {
+    padding: 9px 18px; border-radius: 999px; background: #293184; color: #fff;
+    border: none; font-size: 13.5px; font-weight: 600; cursor: pointer;
+  }
+  .btn-guardar-respuesta:hover { background: #1a1f5c; }
 </style>
 </head>
 <body>
@@ -58,6 +76,21 @@
       <div class="campo">
         <span>Detalle del PQR</span>
         <div class="detalle-box">{{ r['detalle'] }}</div>
+      </div>
+
+      <div class="campo respuesta-campo">
+        <span>Nuestra respuesta {% if r['publicado'] %}<span class="estado estado-publicado">Publicada</span>{% endif %}</span>
+        <form method="POST" action="{{ url_for('admin_responder', pqr_id=r['id']) }}">
+          <input type="hidden" name="clave" value="{{ clave }}">
+          <input type="hidden" name="tipo" value="{{ filtro_tipo }}">
+          <input type="hidden" name="fecha" value="{{ filtro_fecha }}">
+          <textarea name="respuesta" rows="4" placeholder="Escribe la respuesta que verán los usuarios en Colombina te Escucha (sin datos personales)...">{{ r['respuesta'] or '' }}</textarea>
+          <label class="publicar-check">
+            <input type="checkbox" name="publicar" {% if r['publicado'] %}checked{% endif %}>
+            Publicar esta respuesta en Colombina te Escucha (se mostrará solo el tipo, el caso y la respuesta, sin nombre, CIN, ruta, conductor ni placa)
+          </label>
+          <button type="submit" class="btn-guardar-respuesta">Guardar respuesta</button>
+        </form>
       </div>
 
       <div class="acciones">
