@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Casos resueltos — Colombina te Escucha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azul: #293184; --azul-oscuro: #1a1f5c; --rojo: #e11d1f; --crema: #fbf8f2;
+    --tinta: #22243a; --gris-campo: #f1efe8; --borde: #d8d3c4; --dorado: #f0a93b; --radio: 14px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Inter', sans-serif; background: var(--crema); color: var(--tinta); min-height: 100vh; }
+  .topbar {
+    background: var(--azul); padding: 18px 24px; display: flex; align-items: center;
+    justify-content: center; position: relative; box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+  .topbar .logo { height: 46px; width: auto; }
+  .nav-inicio {
+    position: absolute; right: 24px; top: 50%; transform: translateY(-50%);
+    font-family: 'Fredoka', sans-serif; font-size: 13.5px; font-weight: 600; color: #fff;
+    text-decoration: none; background: rgba(255,255,255,0.14); padding: 9px 16px;
+    border-radius: 999px; border: 1.5px solid rgba(255,255,255,0.3); white-space: nowrap;
+  }
+  .nav-inicio:hover { background: rgba(255,255,255,0.24); }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 40px 20px 60px; }
+  .hero { text-align: center; margin-bottom: 24px; }
+  .eyebrow {
+    display: inline-block; font-family: 'Fredoka', sans-serif; font-size: 13px;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--rojo);
+    background: rgba(225,29,31,0.08); padding: 5px 14px; border-radius: 999px; margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-family: 'Fredoka', sans-serif; font-size: clamp(1.8rem, 5vw, 2.4rem);
+    font-weight: 600; color: var(--azul); margin: 0 0 10px;
+  }
+  .hero p { max-width: 480px; margin: 0 auto; color: #52546b; font-size: 14.5px; line-height: 1.55; }
+
+  .filtros { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 24px 0 28px; }
+  .filtro-chip {
+    font-family: 'Fredoka', sans-serif; font-size: 13.5px; font-weight: 500; padding: 9px 18px;
+    border-radius: 999px; border: 1.5px solid var(--borde); background: #fff; color: var(--tinta);
+    text-decoration: none; transition: all 0.15s;
+  }
+  .filtro-chip:hover { border-color: var(--azul); }
+  .filtro-chip.active { background: var(--azul); border-color: var(--azul); color: #fff; }
+
+  .lista { display: flex; flex-direction: column; gap: 14px; }
+  .caso-card {
+    background: #fff; border-radius: var(--radio); padding: 20px 22px;
+    box-shadow: 0 8px 20px rgba(41,49,132,0.08); border: 1px solid var(--borde);
+  }
+  .caso-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .tag { font-family: 'Fredoka', sans-serif; padding: 5px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: #fff; }
+  .tag-Petición { background: #4a5cc9; }
+  .tag-Reclamo { background: #b3161a; }
+  .tag-Sugerencia { background: #f0a93b; }
+  .tag-Felicitación { background: #2ea043; }
+  .caso-fecha { font-size: 12px; color: #9496ab; }
+
+  .caso-meta {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;
+    background: var(--gris-campo); border-radius: 10px; padding: 12px 14px;
+  }
+  .caso-meta div span { display: block; font-size: 10.5px; font-weight: 600; color: #6b6d85; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 2px; }
+  .caso-meta div p { margin: 0; font-size: 13.5px; }
+  @media (max-width: 560px) { .caso-meta { grid-template-columns: 1fr; } }
+
+  .bloque { margin-bottom: 10px; }
+  .bloque:last-child { margin-bottom: 0; }
+  .bloque span.label { display: block; font-size: 11px; font-weight: 600; color: #6b6d85; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 4px; }
+  .bloque p { margin: 0; font-size: 14px; line-height: 1.5; }
+  .respuesta { background: rgba(41,49,132,0.06); border-radius: 10px; padding: 10px 12px; }
+  .respuesta span.label { color: var(--azul); }
+
+  .empty { text-align: center; color: #888; padding: 50px 20px; font-size: 14.5px; }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <img src="{{ url_for('static', filename='colombina_logo.jpg') }}" alt="Colombina" class="logo">
+    <a class="nav-inicio" href="{{ url_for('index') }}">&larr; Volver al buzón</a>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <span class="eyebrow">Aforo público</span>
+      <h1>Casos resueltos</h1>
+      <p>Estos son casos reales reportados por usuarios del transporte, con la respuesta de la empresa. No se muestra información personal del pasajero.</p>
+    </section>
+
+    <div class="filtros">
+      <a class="filtro-chip {% if not filtro_tipo %}active{% endif %}" href="{{ url_for('casos_resueltos') }}">Todos</a>
+      {% for t in tipos_filtro %}
+      <a class="filtro-chip {% if filtro_tipo == t %}active{% endif %}" href="{{ url_for('casos_resueltos', tipo=t) }}">{{ t }}</a>
+      {% endfor %}
+    </div>
+
+    {% if casos %}
+    <div class="lista">
+      {% for c in casos %}
+      <div class="caso-card">
+        <div class="caso-top">
+          <span class="tag tag-{{ c['tipo_pqr'] }}">{{ c['tipo_pqr'] }}</span>
+          <span class="caso-fecha">{{ c['fecha'][:10] }}</span>
+        </div>
+
+        <div class="caso-meta">
+          <div><span>Ruta</span><p>{{ c['ruta'] }}</p></div>
+          <div><span>Conductor(a)</span><p>{{ c['conductor'] }}</p></div>
+          <div><span>Placa</span><p>{{ c['placa'] }}</p></div>
+        </div>
+
+        <div class="bloque">
+          <span class="label">Caso presentado</span>
+          <p>{{ c['detalle'] }}</p>
+        </div>
+        <div class="bloque respuesta">
+          <span class="label">Nuestra respuesta</span>
+          <p>{{ c['respuesta'] }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">
+      {% if filtro_tipo %}
+      Aún no hay casos resueltos publicados de tipo "{{ filtro_tipo }}".
+      {% else %}
+      Aún no hay casos resueltos publicados.
+      {% endif %}
+    </div>
+    {% endif %}
+  </main>
+</body>
+</html>
