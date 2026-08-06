@@ -159,6 +159,7 @@ def admin():
 
     tipo = request.args.get("tipo", "")
     fecha = request.args.get("fecha", "")
+    estado = request.args.get("estado", "")
 
     condiciones = []
     valores = []
@@ -168,24 +169,35 @@ def admin():
     if fecha:
         condiciones.append("fecha LIKE %s")
         valores.append(f"{fecha}%")
+    if estado == "pendiente":
+        condiciones.append("aprobado = FALSE")
+    elif estado == "visto":
+        condiciones.append("aprobado = TRUE")
 
     query = "SELECT * FROM pqr"
     if condiciones:
         query += " WHERE " + " AND ".join(condiciones)
-    query += " ORDER BY id DESC"
+    query += " ORDER BY aprobado ASC, id DESC"
 
     db = get_db()
     cur = db.cursor()
     cur.execute(query, tuple(valores))
     registros = cur.fetchall()
     cur.close()
+
+    total = len(registros)
+    pendientes = sum(1 for r in registros if not r["aprobado"])
+
     return render_template(
         "admin.html",
         registros=registros,
         clave=clave,
         filtro_tipo=tipo,
         filtro_fecha=fecha,
+        filtro_estado=estado,
         tipos_pqr_filtro=[t for t in TIPOS_PQR if t != "Queja"],
+        total=total,
+        pendientes=pendientes,
     )
 
 

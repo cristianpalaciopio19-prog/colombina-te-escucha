@@ -12,6 +12,10 @@
   th, td { padding: 10px 12px; text-align: left; font-size: 13.5px; border-bottom: 1px solid #eee; vertical-align: top; }
   th { background: #293184; color: #fff; font-weight: 600; }
   tr:last-child td { border-bottom: none; }
+  tr.fila-pendiente { background: #fff9ec; font-weight: 600; }
+  tr.fila-pendiente td { color: #22243a; }
+  tr.fila-visto { opacity: 0.6; }
+  tr.fila-visto:hover { opacity: 1; }
   .tag { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #fff; }
   .tag-Petición { background: #4a5cc9; }
   .tag-Queja { background: #e11d1f; }
@@ -60,7 +64,7 @@
 <body>
   <div class="top">
     <h1>Registros de PQR</h1>
-    <span class="count">{{ registros|length }} registro(s)</span>
+    <span class="count">{{ total }} registro(s) — {{ pendientes }} pendiente(s)</span>
   </div>
 
   <form class="filtros" method="GET">
@@ -72,7 +76,12 @@
       {% endfor %}
     </select>
     <input type="date" name="fecha" value="{{ filtro_fecha }}" onchange="this.form.submit()">
-    {% if filtro_tipo or filtro_fecha %}
+    <select name="estado" onchange="this.form.submit()">
+      <option value="">Todos los estados</option>
+      <option value="pendiente" {% if filtro_estado == "pendiente" %}selected{% endif %}>Solo pendientes</option>
+      <option value="visto" {% if filtro_estado == "visto" %}selected{% endif %}>Solo vistos</option>
+    </select>
+    {% if filtro_tipo or filtro_fecha or filtro_estado %}
     <a class="link-limpiar" href="{{ url_for('admin', clave=clave) }}">Limpiar filtro</a>
     {% endif %}
   </form>
@@ -88,7 +97,7 @@
       <th>Acciones</th>
     </tr>
     {% for r in registros %}
-    <tr>
+    <tr class="{{ 'fila-pendiente' if not r['aprobado'] else 'fila-visto' }}">
       <td>{{ r['fecha'] }}</td>
       <td>{{ r['nombre'] }}</td>
       <td>{{ r['ruta'] }} — {{ r['municipio'] }}</td>
@@ -111,9 +120,9 @@
           <input type="hidden" name="fecha" value="{{ filtro_fecha }}">
           <input type="hidden" name="nuevo_estado" value="{{ 'false' if r['aprobado'] else 'true' }}">
           {% if r['aprobado'] %}
-          <button type="submit" class="btn-desaprobar">Desaprobar</button>
+          <button type="submit" class="btn-desaprobar">Marcar pendiente</button>
           {% else %}
-          <button type="submit" class="btn-aprobar">Aprobar</button>
+          <button type="submit" class="btn-aprobar">Marcar visto</button>
           {% endif %}
         </form>
         <form method="POST" action="{{ url_for('admin_eliminar', pqr_id=r['id']) }}" onsubmit="return confirm('¿Eliminar este registro de forma permanente?');">
