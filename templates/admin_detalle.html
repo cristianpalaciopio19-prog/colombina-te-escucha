@@ -54,7 +54,7 @@
 </head>
 <body>
   <div class="wrap">
-    <a class="back" href="{{ url_for('admin', clave=clave) }}">&larr; Volver al listado</a>
+    <a class="back" href="{{ url_for('admin', clave=clave, tipo=filtro_tipo, fecha=filtro_fecha, estado=filtro_estado) }}">&larr; Volver al listado</a>
     <div class="card">
       <span class="tag tag-{{ r['tipo_pqr'] }}">{{ r['tipo_pqr'] }}</span>
       {% if r['aprobado'] %}
@@ -84,6 +84,7 @@
           <input type="hidden" name="clave" value="{{ clave }}">
           <input type="hidden" name="tipo" value="{{ filtro_tipo }}">
           <input type="hidden" name="fecha" value="{{ filtro_fecha }}">
+          <input type="hidden" name="estado" value="{{ filtro_estado }}">
           <textarea name="respuesta" rows="4" placeholder="Escribe la respuesta que verán los usuarios en Colombina te Escucha (sin datos personales)...">{{ r['respuesta'] or '' }}</textarea>
           <label class="publicar-check">
             <input type="checkbox" name="publicar" {% if r['publicado'] %}checked{% endif %}>
@@ -98,6 +99,7 @@
           <input type="hidden" name="clave" value="{{ clave }}">
           <input type="hidden" name="tipo" value="{{ filtro_tipo }}">
           <input type="hidden" name="fecha" value="{{ filtro_fecha }}">
+          <input type="hidden" name="estado" value="{{ filtro_estado }}">
           <input type="hidden" name="nuevo_estado" value="{{ 'false' if r['aprobado'] else 'true' }}">
           {% if r['aprobado'] %}
           <button type="submit" class="btn-desaprobar">Marcar como pendiente</button>
@@ -109,6 +111,7 @@
           <input type="hidden" name="clave" value="{{ clave }}">
           <input type="hidden" name="tipo" value="{{ filtro_tipo }}">
           <input type="hidden" name="fecha" value="{{ filtro_fecha }}">
+          <input type="hidden" name="estado" value="{{ filtro_estado }}">
           <button type="submit" class="btn-eliminar">Eliminar este registro</button>
         </form>
       </div>

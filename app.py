@@ -215,7 +215,7 @@ def admin_detalle(pqr_id):
 
     if registro is None:
         flash("Ese registro ya no existe.", "error")
-        return redirect(url_for("admin", clave=clave))
+        return redirect(url_for("admin", clave=clave, estado=request.args.get("estado", "")))
 
     return render_template(
         "admin_detalle.html",
@@ -223,6 +223,7 @@ def admin_detalle(pqr_id):
         clave=clave,
         filtro_tipo=request.args.get("tipo", ""),
         filtro_fecha=request.args.get("fecha", ""),
+        filtro_estado=request.args.get("estado", ""),
     )
 
 
@@ -234,6 +235,7 @@ def admin_eliminar(pqr_id):
 
     tipo = request.form.get("tipo", "")
     fecha = request.form.get("fecha", "")
+    estado = request.form.get("estado", "")
 
     db = get_db()
     cur = db.cursor()
@@ -241,7 +243,7 @@ def admin_eliminar(pqr_id):
     db.commit()
     cur.close()
     flash("Registro eliminado.", "success")
-    return redirect(url_for("admin", clave=clave, tipo=tipo, fecha=fecha))
+    return redirect(url_for("admin", clave=clave, tipo=tipo, fecha=fecha, estado=estado))
 
 
 @app.route("/admin/aprobar/<int:pqr_id>", methods=["POST"])
@@ -252,6 +254,7 @@ def admin_aprobar(pqr_id):
 
     tipo = request.form.get("tipo", "")
     fecha = request.form.get("fecha", "")
+    estado = request.form.get("estado", "")
     nuevo_estado = request.form.get("nuevo_estado", "true") == "true"
 
     db = get_db()
@@ -260,7 +263,7 @@ def admin_aprobar(pqr_id):
     db.commit()
     cur.close()
     flash("Registro marcado como visto." if nuevo_estado else "Registro marcado como pendiente.", "success")
-    return redirect(url_for("admin", clave=clave, tipo=tipo, fecha=fecha))
+    return redirect(url_for("admin", clave=clave, tipo=tipo, fecha=fecha, estado=estado))
 
 
 @app.route("/admin/responder/<int:pqr_id>", methods=["POST"])
@@ -271,6 +274,7 @@ def admin_responder(pqr_id):
 
     tipo = request.form.get("tipo", "")
     fecha = request.form.get("fecha", "")
+    estado = request.form.get("estado", "")
     respuesta = request.form.get("respuesta", "").strip()
     publicar = request.form.get("publicar") == "on"
 
@@ -284,7 +288,7 @@ def admin_responder(pqr_id):
     cur.close()
 
     flash("Respuesta guardada y publicada." if publicar else "Respuesta guardada (sin publicar).", "success")
-    return redirect(url_for("admin_detalle", pqr_id=pqr_id, clave=clave, tipo=tipo, fecha=fecha))
+    return redirect(url_for("admin_detalle", pqr_id=pqr_id, clave=clave, tipo=tipo, fecha=fecha, estado=estado))
 
 
 init_db()
