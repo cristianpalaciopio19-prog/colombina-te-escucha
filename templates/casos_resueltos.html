@@ -104,7 +104,7 @@
       <div class="caso-card">
         <div class="caso-top">
           <span class="tag tag-{{ c['tipo_pqr'] }}">{{ c['tipo_pqr'] }}</span>
-          <span class="caso-fecha">{{ c['fecha'][:10] }}</span>
+          <span class="caso-fecha">PQR: {{ c['fecha'][:10] }}</span>
         </div>
 
         <div class="caso-meta">
@@ -118,7 +118,7 @@
           <p>{{ c['detalle'] }}</p>
         </div>
         <div class="bloque respuesta">
-          <span class="label">Nuestra respuesta</span>
+          <span class="label">Nuestra respuesta{% if c['fecha_respuesta'] %} · {{ c['fecha_respuesta'][:10] }}{% endif %}</span>
           <p>{{ c['respuesta'] }}</p>
         </div>
       </div>

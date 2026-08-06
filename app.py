@@ -63,6 +63,9 @@ def init_db():
     cur.execute(
         "ALTER TABLE pqr ADD COLUMN IF NOT EXISTS publicado BOOLEAN NOT NULL DEFAULT FALSE"
     )
+    cur.execute(
+        "ALTER TABLE pqr ADD COLUMN IF NOT EXISTS fecha_respuesta TEXT"
+    )
     conn.commit()
     cur.close()
     conn.close()
@@ -85,7 +88,7 @@ def casos_resueltos():
     db = get_db()
     cur = db.cursor()
     query = """
-        SELECT id, fecha, tipo_pqr, detalle, ruta, conductor, placa, respuesta
+        SELECT id, fecha, tipo_pqr, detalle, ruta, conductor, placa, respuesta, fecha_respuesta
         FROM pqr
         WHERE publicado = TRUE AND respuesta IS NOT NULL AND respuesta <> ''
     """
@@ -281,8 +284,8 @@ def admin_responder(pqr_id):
     db = get_db()
     cur = db.cursor()
     cur.execute(
-        "UPDATE pqr SET respuesta = %s, publicado = %s WHERE id = %s",
-        (respuesta, publicar, pqr_id),
+        "UPDATE pqr SET respuesta = %s, publicado = %s, fecha_respuesta = %s WHERE id = %s",
+        (respuesta, publicar, hora_colombia(), pqr_id),
     )
     db.commit()
     cur.close()
